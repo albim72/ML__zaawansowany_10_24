@@ -19,4 +19,25 @@ def build_model(hp):
     )
     return model
 
-    
+tuner = RandomSearch(
+    build_model,
+    objective='val_accuracy',
+    max_trials=5,
+    executions_per_trial=3,
+    directory='mys_dir',
+    project_name='myparams'
+)
+
+(x_train,y_train),(x_test,y_test) = tf.keras.datasets.mnist.load_data()
+x_train,x_test = x_train/255.0,x_test/255.0
+
+tuner.search(x_train,y_train,
+             epochs=5,
+             validation_data = (x_test,y_test))
+
+best_model = tuner.get_best_models(num_models=1)[0]
+print(tuner.results_summary())
+
+print("OCENA MODELU:\n")
+eval_loss,eval_accuracy = best_model.evaluate(x_test,y_test)
+print(f'najlepszy model: Loss -> {eval_loss}, Accuracy -> {eval_accuracy}')
